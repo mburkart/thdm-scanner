@@ -1,0 +1,8 @@
+*.pyc
+
+*.root
+*.pdf
+*.png
+# do not track auxiliary files created by vim
+*.un~
+*~
