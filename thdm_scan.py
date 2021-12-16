@@ -13,12 +13,17 @@ logger = logging.getLogger("")
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-c", "--config",
-                        type=str,
-                        help="Input config file")
-    parser.add_argument("-v", "--verbose",
-                        action="store_true",
-                        help="Enable debug logging")
+    parser.add_argument(
+            "-c", "--config",
+            type=str,
+            required=True,
+            help="Input config file"
+    )
+    parser.add_argument(
+            "-v", "--verbose",
+            action="store_true",
+            help="Enable debug logging"
+    )
     return parser.parse_args()
 
 
