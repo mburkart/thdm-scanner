@@ -4,6 +4,8 @@ import yaml
 import argparse
 import logging
 import os
+from functools import partial
+import multiprocessing
 
 import thdm_scanner
 
@@ -24,6 +26,14 @@ def parse_args():
             action="store_true",
             help="Enable debug logging"
     )
+    parser.add_argument(
+            "-p", "--processes",
+            dest="procs",
+            type=int,
+            default=1,
+            help="Number of processes used to "
+            "compute the grid of points."
+    )
     return parser.parse_args()
 
 
@@ -34,6 +44,30 @@ def setup_logging(level=logging.INFO):
     handler = logging.StreamHandler()
     handler.setFormatter(formatter)
     logger.addHandler(handler)
+
+
+def run_point(mod_pars, model=None, outpath="output"):
+    (par_1, val_1), (par_2, val_2) = mod_pars
+    model_point = thdm_scanner.THDMPoint((par_1, par_2),
+                                         (val_1, val_2))
+    # print(model.fixed_model_params)
+    dicts = [model.fixed_model_params,
+             {par_1: float(val_1), par_2: float(val_2)}]
+    input_dict = {k: v for di in dicts for k, v in di.iteritems()}
+    print(input_dict)
+    inputs = thdm_scanner.THDMInput(**input_dict)
+    # Run 2HDMC calculations
+    thdm_runner = thdm_scanner.THDMCRunner(outpath=outpath)
+    thdm_runner.set_inputs(inputs)
+    thdm_runner.run()
+    thdm_runner.harvest_output(model_point)
+
+    # Run SusHi calculation separately for each Higgs boson
+    sushi_runner = thdm_scanner.SusHiRunner(outpath=outpath)
+    sushi_runner.set_inputs(inputs)
+    sushi_runner.run(multiproc=False)
+    sushi_runner.harvest_output(model_point)
+    return model_point
 
 
 def main(args):
@@ -49,27 +83,19 @@ def main(args):
     model = thdm_scanner.THDMModel(config["name"],
                                    config["scan_parameter"],
                                    config["benchmark_parameter"])
-    for ((par_1, val_1), (par_2, val_2)) in model.parameter_points():
-        model_point = thdm_scanner.THDMPoint((par_1, par_2),
-                                             (val_1, val_2))
-        # print(model.fixed_model_params)
-        dicts = [model.fixed_model_params,
-                 {par_1: float(val_1), par_2: float(val_2)}]
-        input_dict = {k: v for di in dicts for k, v in di.iteritems()}
-        print(input_dict)
-        inputs = thdm_scanner.THDMInput(**input_dict)
-        # Run 2HDMC calculations
-        thdm_runner = thdm_scanner.THDMCRunner(outpath=output_path)
-        thdm_runner.set_inputs(inputs)
-        thdm_runner.run()
-        thdm_runner.harvest_output(model_point)
 
-        # Run SusHi calculation separately for each Higgs boson
-        sushi_runner = thdm_scanner.SusHiRunner(outpath=output_path)
-        sushi_runner.set_inputs(inputs)
-        sushi_runner.run(multiproc=False)
-        sushi_runner.harvest_output(model_point)
+    if args.procs > 1:
+        pool = multiprocessing.Pool(args.procs)
+        model_points = pool.map(partial(run_point,
+                                        model=model,
+                                        outpath=output_path),
+                                model.parameter_points())
+    else:
+        model_points = []
+        for mod_pars in model.parameter_points():
+            model_points.append(run_point(mod_pars, model))
 
+    for model_point in model_points:
         # Add model point to grid.
         model.add_point(model_point)
     # Write grid of points to root file
