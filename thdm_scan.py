@@ -4,7 +4,7 @@ import yaml
 import argparse
 import logging
 import os
-from functools import partial
+from itertools import repeat
 import multiprocessing
 
 import thdm_scanner
@@ -53,7 +53,7 @@ def run_point(mod_pars, model=None, outpath="output"):
     # print(model.fixed_model_params)
     dicts = [model.fixed_model_params,
              {par_1: float(val_1), par_2: float(val_2)}]
-    input_dict = {k: v for di in dicts for k, v in di.iteritems()}
+    input_dict = {k: v for di in dicts for k, v in di.items()}
     print(input_dict)
     inputs = thdm_scanner.THDMInput(**input_dict)
     # Run 2HDMC calculations
@@ -85,11 +85,11 @@ def main(args):
                                    config["benchmark_parameter"])
 
     if args.procs > 1:
-        pool = multiprocessing.Pool(args.procs)
-        model_points = pool.map(partial(run_point,
-                                        model=model,
-                                        outpath=output_path),
-                                model.parameter_points())
+        with multiprocessing.Pool(args.procs) as pool:
+            model_points = pool.starmap(run_point,
+                                        zip(model.parameter_points(),
+                                            repeat(model),
+                                            repeat(output_path)))
     else:
         model_points = []
         for mod_pars in model.parameter_points():

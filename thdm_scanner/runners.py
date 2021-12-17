@@ -67,18 +67,19 @@ class THDMCRunner(THDMRunnerABC):
                                   str(self._input.tanb),
                                   str(self._input.type),
                                   self._outputfile])))
-        subprocess.call([os.path.join(os.environ["THEORY_CODE_PATH"],
-                                      "2HDMC-1.8.0",
-                                      "CalcHybrid"),
-                         str(self._input.mh),
-                         str(self._input.mH),
-                         str(self._input.cos_betal),
-                         str(self._input.Z4),
-                         str(self._input.Z5),
-                         str(self._input.Z7),
-                         str(self._input.tanb),
-                         str(self._input.type),
-                         self._outputfile])
+        subprocess.run([os.path.join(os.environ["THEORY_CODE_PATH"],
+                                     "2HDMC-1.8.0",
+                                     "CalcHybrid"),
+                        str(self._input.mh),
+                        str(self._input.mH),
+                        str(self._input.cos_betal),
+                        str(self._input.Z4),
+                        str(self._input.Z5),
+                        str(self._input.Z7),
+                        str(self._input.tanb),
+                        str(self._input.type),
+                        self._outputfile],
+                       stdout=subprocess.DEVNULL)
         logger.debug("Check if output file has been successfully written.")
         if not os.path.exists(self._outputfile):
             raise RuntimeError("Output file of 2HDMC run not created.")
@@ -123,9 +124,8 @@ class SusHiRunner(THDMRunnerABC):
     def run(self, multiproc=True):
         # For each Higgs boson
         if multiproc:
-            # with multiprocessing.Pool(3) as pool:
-            pool = multiprocessing.Pool(3)
-            pool.map(self._run_single_higgs, [11, 12, 21])
+            with multiprocessing.Pool(3) as pool:
+                pool.map(self._run_single_higgs, [11, 12, 21])
         else:
             for higgs in [11, 12, 21]:
                 self._run_single_higgs(higgs)
@@ -155,7 +155,7 @@ class SusHiRunner(THDMRunnerABC):
         # Write prepared input to input file
         infile.write_file()
         # Run Sushi with prepared input
-        subprocess.call([os.path.join(os.environ["THEORY_CODE_PATH"],
+        subprocess.run([os.path.join(os.environ["THEORY_CODE_PATH"],
                                       "SusHi-1.7.0",
                                       "bin",
                                       "sushi"),
