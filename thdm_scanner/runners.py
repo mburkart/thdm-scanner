@@ -115,7 +115,7 @@ class SusHiRunner(THDMRunnerABC):
     def __init__(self, outpath="output",
                  scan_parameters=("mH", "tanb")):
         self._inputfile = os.path.join(outpath, "SusHi_input.in")
-        self._outputfile = os.path.join(outpath, "SusHi_output.out")
+        self._outputfile = os.path.join(outpath, "SusHi.out")
         self._scan_params = scan_parameters
 
     def set_inputs(self, inputs):
@@ -134,7 +134,7 @@ class SusHiRunner(THDMRunnerABC):
     def _run_single_higgs(self, higgs):
         # Prepare input file for Higgs boson
         infile_name = self._inputfile.replace(".in",
-                                              "{}.{}.{}.{}.H{}.in".format(
+                                              ".{}.{}.{}.{}.H{}.in".format(
                                                   self._scan_params[0],
                                                   getattr(self._input,
                                                           self._scan_params[0]),  # noqa: E501
@@ -160,7 +160,7 @@ class SusHiRunner(THDMRunnerABC):
                                       "bin",
                                       "sushi"),
                          infile_name,
-                         infile_name.replace("in", "out")])  # noqa: E501
+                         infile_name.replace("in", "out").replace("_output", "")])  # noqa: E501
         return
 
     def harvest_output(self, model_point):
@@ -172,7 +172,7 @@ class SusHiRunner(THDMRunnerABC):
         for higgs in [11, 12, 21]:
             outfile = lha_utils.SusHiOutput(
                     self._outputfile.replace(".out",
-                                             "{}.{}.{}.{}.H{}.out".format(
+                                             ".{}.{}.{}.{}.H{}.out".format(
                                                  self._scan_params[0],
                                                  getattr(self._input,
                                                          self._scan_params[0]),
