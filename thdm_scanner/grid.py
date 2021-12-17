@@ -20,6 +20,8 @@ class HiggsProperties(object):
         self._bb_xs = 0.
         self._br_tautau = 0.
         self._gg_xs_scale_unc = (0., 0.)
+        self._yukawa_t = 0
+        self._yukawa_b = 0
 
     @property
     def name(self):
@@ -70,6 +72,22 @@ class HiggsProperties(object):
         if len(unc) != 2:
             raise ValueError("Uncertainty on gg{} xsec must be given as tuple.".format(self.name))  # noqa: E501
         self._gg_xs_scale_unc = unc
+
+    @property
+    def gt(self):
+        return self._yukawa_t
+
+    @gt.setter
+    def gt(self, yukawa):
+        self._yukawa_t = yukawa
+
+    @property
+    def gb(self):
+        return self._yukawa_b
+
+    @gb.setter
+    def gb(self, yukawa):
+        self._yukawa_b = yukawa
 
 
 class THDMPoint(object):
@@ -186,7 +204,9 @@ class THDMModel(object):
                               "xs_bb{}",
                               "br_{}tautau",
                               "xs_gg{}_scale_down",
-                              "xs_gg{}_scale_up"]):
+                              "xs_gg{}_scale_up",
+                              "gt_{}",
+                              "gb_{}"]):
                 hists["{}".format(quant)] = ROOT.TH2D("{}".format(quant),
                                                       "{}".format(quant),
                                                       xbins,
@@ -227,6 +247,12 @@ class THDMModel(object):
                 hists["xs_gg{}_scale_up".format(boson)].Fill(
                         x_val, y_val,
                         getattr(point, boson).gg_xs_scale_unc[1])
+                hists["gt_{}".format(boson)].Fill(
+                        x_val, y_val,
+                        getattr(point, boson).gt)
+                hists["gb_{}".format(boson)].Fill(
+                        x_val, y_val,
+                        getattr(point, boson).gb)
 
         # Write and close the root file
         output.Write()

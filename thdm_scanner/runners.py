@@ -5,6 +5,7 @@ import os
 import subprocess
 import multiprocessing
 import logging
+import math
 
 import thdm_scanner
 import thdm_scanner.lha_utils as lha_utils
@@ -103,6 +104,24 @@ class THDMCRunner(THDMRunnerABC):
         A = thdm_scanner.grid.HiggsProperties("A")
         A.mass = outfile.mA
         A.br_tautau = outfile.br_Atautau
+        # Add Yukawa couplings for each Higgs boson based on
+        # input parameters
+        beta = math.atan(self._input.tanb)
+        alpha = beta - math.acos(self._input.cos_betal)
+        if self._input.type == 1:
+            h.gt = math.cos(alpha) / math.sin(beta)
+            h.gb = math.cos(alpha) / math.sin(beta)
+            H.gt = math.sin(alpha) / math.sin(beta)
+            H.gb = math.sin(alpha) / math.sin(beta)
+            A.gt = -1. / math.tan(beta)
+            A.gb = 1. / math.tan(beta)
+        else:
+            h.gt = math.cos(alpha) / math.sin(beta)
+            h.gb = -math.sin(alpha) / math.cos(beta)
+            H.gt = math.sin(alpha) / math.sin(beta)
+            H.gb = math.cos(alpha) / math.cos(beta)
+            A.gt = -1. / math.tan(beta)
+            A.gb = -math.tan(beta)
         # Add the correct Higgs properties to the model point
         model_point.h = h
         model_point.H = H
