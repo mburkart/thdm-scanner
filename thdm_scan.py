@@ -57,13 +57,15 @@ def run_point(mod_pars, model=None, outpath="output"):
     print(input_dict)
     inputs = thdm_scanner.THDMInput(**input_dict)
     # Run 2HDMC calculations
-    thdm_runner = thdm_scanner.THDMCRunner(outpath=outpath)
+    thdm_runner = thdm_scanner.THDMCRunner(outpath=outpath,
+                                           scan_parameters=(par_1, par_2))
     thdm_runner.set_inputs(inputs)
     thdm_runner.run()
     thdm_runner.harvest_output(model_point)
 
     # Run SusHi calculation separately for each Higgs boson
-    sushi_runner = thdm_scanner.SusHiRunner(outpath=outpath)
+    sushi_runner = thdm_scanner.SusHiRunner(outpath=outpath,
+                                            scan_parameters=(par_1, par_2))
     sushi_runner.set_inputs(inputs)
     sushi_runner.run(multiproc=False)
     sushi_runner.harvest_output(model_point)

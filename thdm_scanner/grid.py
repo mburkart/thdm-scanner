@@ -2,6 +2,7 @@
 
 import logging
 
+import numpy as np
 
 import ROOT
 ROOT.gROOT.SetBatch()
@@ -145,8 +146,10 @@ class THDMModel(object):
 
     def parameter_points(self):
         par_1, par_2 = self._scan_parameters.keys()
-        for x in range(*self._scan_parameters[par_1]):
-            for y in range(*self._scan_parameters[par_2]):
+        for x in np.round(np.arange(*self._scan_parameters[par_1]),
+                          decimals=2):
+            for y in np.round(np.arange(*self._scan_parameters[par_2]),
+                              decimals=2):
                 yield ((par_1, x), (par_2, y))
 
     def add_point(self, point):
@@ -166,14 +169,14 @@ class THDMModel(object):
                 - self._scan_parameters[par_1][2] / 2.)
         xup = (self._scan_parameters[par_1][1]
                - self._scan_parameters[par_1][2] / 2.)
-        xbins = int((self._scan_parameters[par_1][1] - self._scan_parameters[par_1][0])  # noqa: E501
-                    / self._scan_parameters[par_1][2])
+        xbins = int(round((self._scan_parameters[par_1][1] - self._scan_parameters[par_1][0])  # noqa: E501
+                          / self._scan_parameters[par_1][2]))
         ylow = (self._scan_parameters[par_2][0]
                 - self._scan_parameters[par_2][2] / 2.)
         yup = (self._scan_parameters[par_2][1]
                - self._scan_parameters[par_2][2] / 2.)
-        ybins = int((self._scan_parameters[par_2][1] - self._scan_parameters[par_2][0])  # noqa: E501
-                    / self._scan_parameters[par_2][2])
+        ybins = int(round((self._scan_parameters[par_2][1] - self._scan_parameters[par_2][0])  # noqa: E501
+                          / self._scan_parameters[par_2][2]))
         # Create histograms for each quantity to be written
         hists = {}
         for boson in ["h", "H", "A"]:
