@@ -323,7 +323,7 @@ class SusHiInput(LHAFile):
         sushi_block.add_entry_from_vals("5", "2", "order ggh: -1 = off, 0 = LO, 1 = NLO, 2 = NNLO, 3 = N3LO")  # noqa: E501
         sushi_block.add_entry_from_vals("6", "2", "order bbh: -1 = off, 0 = LO, 1 = NLO, 2 = NNLO")  # noqa: E501
         sushi_block.add_entry_from_vals("7", "1", "electroweak cont. for ggh:")
-        sushi_block.add_entry_from_vals("19", "1", "0 = silent mode of SusHi, 1 = normal output")  # noqa: E501
+        sushi_block.add_entry_from_vals("19", "0", "0 = silent mode of SusHi, 1 = normal output")  # noqa: E501
         sushi_block.add_entry_from_vals("20", "0", "ggh@nnlo subprocesses: 0=all, 10=ind. contributions")  # noqa: E501
         # 2HDMC input block
         thdmc_block = LHABlock("2HDMC", "2HDMC arXiv:0902.0851")
