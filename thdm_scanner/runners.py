@@ -7,6 +7,8 @@ import multiprocessing
 import logging
 import math
 
+import numpy as np
+
 import thdm_scanner
 import thdm_scanner.lha_utils as lha_utils
 
@@ -132,10 +134,12 @@ class THDMCRunner(THDMRunnerABC):
 class SusHiRunner(THDMRunnerABC):
 
     def __init__(self, outpath="output",
-                 scan_parameters=("mH", "tanb")):
+                 scan_parameters=("mH", "tanb"),
+                 run_pdf_uncerts=False):
         self._inputfile = os.path.join(outpath, "SusHi_input.in")
         self._outputfile = os.path.join(outpath, "SusHi.out")
         self._scan_params = scan_parameters
+        self._run_uncerts = run_pdf_uncerts
 
     def set_inputs(self, inputs):
         self._input = inputs
@@ -180,6 +184,28 @@ class SusHiRunner(THDMRunnerABC):
                                       "sushi"),
                          infile_name,
                          infile_name.replace("in", "out").replace("_output", "")])  # noqa: E501
+        # Perform a separate run for each PDF and alpha_s
+        # replica to calculate uncertainty
+        if self._run_uncerts:
+            for pdf_member in range(1, 103):
+                inname_update = infile_name.replace(
+                    ".in",
+                    ".pdf{}.in".format(pdf_member))
+                # Write prepared input to input file
+                infile.pdf_set = pdf_member
+                # TODO: alpha_s needs to be set correctly for the two alpha_s variations
+                if pdf_member == 101:
+                    infile.alpha_s = 0.1165
+                elif pdf_member == 102:
+                    infile.alpha_s = 0.1195
+                infile.write_file(inname_update)
+                # Run Sushi with prepared input
+                subprocess.run([os.path.join(os.environ["THEORY_CODE_PATH"],
+                                              "SusHi-1.7.0",
+                                              "bin",
+                                              "sushi"),
+                                 inname_update,
+                                 inname_update.replace("in", "out").replace("_output", "")])  # noqa: E501
         return
 
     def harvest_output(self, model_point):
@@ -212,4 +238,40 @@ class SusHiRunner(THDMRunnerABC):
                                        outfile.mPhi,
                                        getattr(model_point,
                                                higgs_dict[higgs]).mass))
+            # Read pdf and alpha_s uncertainties if requested
+            if self._run_uncerts:
+                # Collect all calculated cross sections for pdf and
+                # alpha_s variations.
+                ggPhi_xsections = []
+                for pdf_member in range(1, 103):
+                    outname = self._outputfile.replace(".out",
+                                                       ".{}.{}.{}.{}.H{}.pdf{}.out".format(
+                                                           self._scan_params[0],
+                                                           getattr(self._input,
+                                                                   self._scan_params[0]),
+                                                           self._scan_params[1],
+                                                           getattr(self._input,
+                                                                   self._scan_params[1]),
+                                                           higgs,
+                                                           pdf_member))
+                    outfile = lha_utils.SusHiOutput(outname)
+                    ggPhi_xsections.append(outfile.xs_ggPhi)
+                    # Remove all files related to the calculation
+                    # of pdf and alpha_s uncertainties
+                    os.remove(outname)
+                    os.remove(outname.replace(".out", ".in").replace("SusHi", "SusHi_input"))
+                    os.remove(outname.replace(".out", ".out_murdep"))
+                # Calculate the uncertainties from the collected values
+                # For the pdf uncertainties there are two different
+                # possibilieties to calculate the uncertainties (arXiv:)
+                # Possibility 1:
+                pdf_unc = np.std(ggPhi_xsections[:-2], ddof=1)
+                # Possibility 2 (asymmetric non-Gaussian case):
+                # sorted_pdf_uncs = sorted(ggPhi_xsections[:-2])
+                # pdf_unc = (sorted_pdf_uncs[83]-sorted_pdf_uncs[15]) / 2.
+
+                # Calculate alpha_s uncertainty from remaining variations
+                alphas_unc = (ggPhi_xsections[-1] - ggPhi_xsections[-2]) / 2.
+                pdf_as_unc = math.sqrt(pdf_unc**2 + alphas_unc**2)
+                getattr(model_point, higgs_dict[higgs]).gg_xs_pdfas_unc = (-pdf_as_unc, pdf_as_unc)
         return

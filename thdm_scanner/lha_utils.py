@@ -371,10 +371,13 @@ class SusHiInput(LHAFile):
         # PDF input block
         pdf_block = LHABlock("PDFSPEC")
         pdf_block.add_entry_from_vals("1", "MMHT2014lo68cl.LHgrid", "name of pdf (lo)")  # noqa: E501
-        pdf_block.add_entry_from_vals("2", "PDF4LHC15_nlo_mc.LHgrid", "name of pdf (nlo)")  # noqa: E501
-        pdf_block.add_entry_from_vals("3", "PDF4LHC15_nnlo_mc.LHgrid", "name of pdf (nnlo)")  # noqa: E501
-        pdf_block.add_entry_from_vals("4", "PDF4LHC15_nnlo_mc.LHgrid", "name of pdf (n3lo)")  # noqa: E501
-        pdf_block.add_entry_from_vals("10", "0", "set number - if different for LO, NLO, NNLO, N3LO use entries 11, 12, 13")  # noqa: E501
+        pdf_block.add_entry_from_vals("2", "PDF4LHC15_nlo_mc_pdfas.LHgrid", "name of pdf (nlo)")  # noqa: E501
+        pdf_block.add_entry_from_vals("3", "PDF4LHC15_nnlo_mc_pdfas.LHgrid", "name of pdf (nnlo)")  # noqa: E501
+        pdf_block.add_entry_from_vals("4", "PDF4LHC15_nnlo_mc_pdfas.LHgrid", "name of pdf (n3lo)")  # noqa: E501
+        # pdf_block.add_entry_from_vals("10", "0", "set number - if different for LO, NLO, NNLO, N3LO use entries 11, 12, 13")  # noqa: E501
+        pdf_block.add_entry_from_vals("11", "0", "set number - if different for LO, NLO, NNLO, N3LO use entries 11, 12, 13")  # noqa: E501
+        pdf_block.add_entry_from_vals("12", "0", "set number - if different for LO, NLO, NNLO, N3LO use entries 11, 12, 13")  # noqa: E501
+        pdf_block.add_entry_from_vals("13", "0", "set number - if different for LO, NLO, NNLO, N3LO use entries 11, 12, 13")  # noqa: E501
         # vegas input block
         vegas_block = LHABlock("VEGAS")
         vegas_block.add_entry_from_vals("1", "10000", "Number of points")
@@ -492,6 +495,25 @@ class SusHiInput(LHAFile):
     @Z7.setter
     def Z7(self, z7):
         self._set_entry_value("2HDMC", "36", d_to_fortran_s(z7))
+
+    @property
+    def pdf_set(self):
+        return self._get_entry_value("PDFSPEC", "13")
+
+    @pdf_set.setter
+    def pdf_set(self, pdf_set):
+        self._set_entry_value("PDFSPEC", "12", str(pdf_set),
+                              choices=map(str, range(103)))
+        self._set_entry_value("PDFSPEC", "13", str(pdf_set),
+                              choices=map(str, range(103)))
+
+    @property
+    def alpha_s(self):
+        return self._get_entry_value("SMINPUTS", "3")
+
+    @alpha_s.setter
+    def alpha_s(self, alpha_s):
+        self._set_entry_value("SMINPUTS", "3", alpha_s)
 
 
 class THDMCOutput(LHAFile):

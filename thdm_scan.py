@@ -34,6 +34,11 @@ def parse_args():
             help="Number of processes used to "
             "compute the grid of points."
     )
+    parser.add_argument(
+            "-u", "--run-pdfas-uncerts",
+            action="store_true",
+            help="Run variations for pdf and alpha_s uncertainties"
+    )
     return parser.parse_args()
 
 
@@ -46,28 +51,38 @@ def setup_logging(level=logging.INFO):
     logger.addHandler(handler)
 
 
-def run_point(mod_pars, model=None, outpath="output"):
+def run_point(mod_pars, model=None, outpath="output",
+              hybrid_basis=True, run_pdf_uncerts=False):
+    # Create a model point in the 2D model plane
     (par_1, val_1), (par_2, val_2) = mod_pars
     model_point = thdm_scanner.THDMPoint((par_1, par_2),
                                          (val_1, val_2))
     # print(model.fixed_model_params)
+    # Build the dictionary of the inputs from the
+    # fixed parameters of the model and the scanned values
+    # to initialize the input object.
     dicts = [model.fixed_model_params,
              {par_1: float(val_1), par_2: float(val_2)}]
     input_dict = {k: v for di in dicts for k, v in di.items()}
     print(input_dict)
-    inputs = thdm_scanner.THDMInput(**input_dict)
+    if hybrid_basis:
+        inputs = thdm_scanner.THDMInput(**input_dict)
+    else:
+        inputs = thdm_scanner.THDMPhysicsInput(**input_dict)
+    model_point.cos_betal = inputs.cos_betal
     # Run 2HDMC calculations
     thdm_runner = thdm_scanner.THDMCRunner(outpath=outpath,
                                            scan_parameters=(par_1, par_2))
     thdm_runner.set_inputs(inputs)
-    thdm_runner.run()
+    thdm_runner.run(hybrid_basis)
     thdm_runner.harvest_output(model_point)
 
     # Run SusHi calculation separately for each Higgs boson
     sushi_runner = thdm_scanner.SusHiRunner(outpath=outpath,
-                                            scan_parameters=(par_1, par_2))
+                                            scan_parameters=(par_1, par_2),
+                                            run_pdf_uncerts=run_pdf_uncerts)
     sushi_runner.set_inputs(inputs)
-    sushi_runner.run(multiproc=False)
+    sushi_runner.run(multiproc=False, hybrid_basis=hybrid_basis)
     sushi_runner.harvest_output(model_point)
     return model_point
 
@@ -84,18 +99,27 @@ def main(args):
     # For each parameter point
     model = thdm_scanner.THDMModel(config["name"],
                                    config["scan_parameter"],
-                                   config["benchmark_parameter"])
+                                   config["benchmark_parameter"],
+                                   include_pdfas_unc=args.run_pdfas_uncerts)
 
+    if "physical_basis" not in config:
+        hybrid_basis = True
+    else:
+        hybrid_basis = False
     if args.procs > 1:
         with multiprocessing.Pool(args.procs) as pool:
             model_points = pool.starmap(run_point,
                                         zip(model.parameter_points(),
                                             repeat(model),
-                                            repeat(output_path)))
+                                            repeat(output_path),
+                                            repeat(hybrid_basis),
+                                            repeat(args.run_pdfas_uncerts)))
     else:
         model_points = []
         for mod_pars in model.parameter_points():
-            model_points.append(run_point(mod_pars, model))
+            model_points.append(run_point(mod_pars, model,
+                                          output_path, hybrid_basis,
+                                          args.run_pdfas_uncerts))
 
     for model_point in model_points:
         # Add model point to grid.

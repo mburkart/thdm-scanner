@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import logging
+import math
 
 import numpy as np
 
@@ -22,6 +23,7 @@ class HiggsProperties(object):
         self._gg_xs_scale_unc = (0., 0.)
         self._yukawa_t = 0
         self._yukawa_b = 0
+        self._gg_xs_pdfas_unc = (0., 0.)
 
     @property
     def name(self):
@@ -89,6 +91,16 @@ class HiggsProperties(object):
     def gb(self, yukawa):
         self._yukawa_b = yukawa
 
+    @property
+    def gg_xs_pdfas_unc(self):
+        return self._gg_xs_pdfas_unc
+
+    @gg_xs_pdfas_unc.setter
+    def gg_xs_pdfas_unc(self, unc):
+        if len(unc) != 2:
+            raise ValueError("Uncertainty on gg{} xsec must be given as tuple.".format(self.name))  # noqa: E501
+        self._gg_xs_pdfas_unc = unc
+
 
 class THDMPoint(object):
 
@@ -146,13 +158,15 @@ class THDMPoint(object):
 
 class THDMModel(object):
 
-    def __init__(self, model_name, scan_pars, model_pars):
+    def __init__(self, model_name, scan_pars, model_pars,
+                 include_pdfas_unc=False):
         self._name = model_name
         if len(scan_pars.keys()) != 2:
             raise ValueError("Too few or too less scan parameters given")
         self._scan_parameters = scan_pars
         self._model_parameters = model_pars
         self._model_points = []
+        self._pdfas_unc = include_pdfas_unc
 
     @property
     def name(self):
@@ -215,6 +229,19 @@ class THDMModel(object):
                                                       ybins,
                                                       ylow,
                                                       yup)
+            if self._pdfas_unc:
+                for quant in map(lambda x: x.format(boson),
+                                 ["xs_gg{}_pdfas_down",
+                                  "xs_gg{}_pdfas_up",
+                                  ]):
+                    hists["{}".format(quant)] = ROOT.TH2D("{}".format(quant),
+                                                          "{}".format(quant),
+                                                          xbins,
+                                                          xlow,
+                                                          xup,
+                                                          ybins,
+                                                          ylow,
+                                                          yup)
         hists["model_validity"] = ROOT.TH2D("model_validity",
                                             "model_validity",
                                             xbins,
@@ -253,6 +280,14 @@ class THDMModel(object):
                 hists["gb_{}".format(boson)].Fill(
                         x_val, y_val,
                         getattr(point, boson).gb)
+                if self._pdfas_unc:
+                    print("Filling histograms for uncertainties")
+                    hists["xs_gg{}_pdfas_down".format(boson)].Fill(
+                            x_val, y_val,
+                            getattr(point, boson).gg_xs_pdfas_unc[0])
+                    hists["xs_gg{}_pdfas_up".format(boson)].Fill(
+                            x_val, y_val,
+                            getattr(point, boson).gg_xs_pdfas_unc[1])
 
         # Write and close the root file
         output.Write()
