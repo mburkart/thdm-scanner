@@ -2,7 +2,7 @@
 name: "BP1_Type1"
 
 scan_parameter:
-    mH: [150, 1050, 50]
+    mH: [150, 650, 50]
     tanb: [2, 51, 1]
 
 benchmark_parameter:
