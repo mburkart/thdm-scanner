@@ -122,6 +122,7 @@ class THDMPoint(object):
         self._h = h
         self._H = H
         self._A = A
+        self._cos_betal = 0.
 
     @property
     def is_valid_model(self):
@@ -154,6 +155,22 @@ class THDMPoint(object):
     @A.setter
     def A(self, A_prop):
         self._A = A_prop
+
+    @property
+    def cos_betal(self):
+        return self._cos_betal
+
+    @cos_betal.setter
+    def cos_betal(self, cos_betal):
+        # Set cos(beta-alpha) always directly from inputs
+        # We can be save that we use convention B then and
+        # translate to sin(beta-alpha) here.
+        # sin(beta-alpha) should not be set but only retrieved.
+        self._cos_betal = cos_betal
+
+    @property
+    def sin_betal(self):
+        return math.sin(math.acos(cos_betal)
 
 
 class THDMModel(object):
@@ -250,12 +267,30 @@ class THDMModel(object):
                                             ybins,
                                             ylow,
                                             yup)
+        hists["cos_betal"] = ROOT.TH2D("cos(beta-alpha)",
+                                       "cos(beta-alpha)",
+                                       xbins,
+                                       xlow,
+                                       xup,
+                                       ybins,
+                                       ylow,
+                                       yup)
+        hists["sin_betal"] = ROOT.TH2D("sin(beta-alpha)",
+                                       "sin(beta-alpha)",
+                                       xbins,
+                                       xlow,
+                                       xup,
+                                       ybins,
+                                       ylow,
+                                       yup)
         # Fill the histograms per model point
         for point in self._model_points:
             x_val, y_val = (point.parameter_point
                             if point.parameter_names[0] == par_1
                             else reversed(point.parameter_point))
             hists["model_validity"].Fill(x_val, y_val, point.is_valid_model)
+            hists["cos_betal"].Fill(x_val, y_val, point.cos_betal)
+            hists["sin_betal"].Fill(x_val, y_val, point.sin_betal)
             for boson in ["h", "H", "A"]:
                 hists["m_{}".format(boson)].Fill(x_val, y_val,
                                                  getattr(point, boson).mass)
