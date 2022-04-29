@@ -345,8 +345,8 @@ class SusHiInput(LHAFile):
         sm_block.add_entry_from_vals("3", "1.18000000e-01", "alpha_s(MZ) SM MSbar")  # noqa: E501
         sm_block.add_entry_from_vals("4", "9.11876000e+01", "m_Z(pole)")
         sm_block.add_entry_from_vals("5", "4.18000000e+00", "m_b(m_b)")
-        sm_block.add_entry_from_vals("6", "1.73300000e+02", "m_t(pole)")
-        sm_block.add_entry_from_vals("8", "1.27500000e+00", "m_c(m_c)")
+        sm_block.add_entry_from_vals("6", "1.72500000e+02", "m_t(pole)")
+        sm_block.add_entry_from_vals("8", "1.27900000e+00", "m_c(m_c)")
         # distribution blocPDF4LHC15_nnlo_mc
         dist_block = LHABlock("DISTRIB")
         dist_block.add_entry_from_vals("1", "0", "distribution : 0 = sigma_total, 1 = dsigma/dpt,")  # noqa: E501
