@@ -307,7 +307,10 @@ class THDMInput(object):
                  thdm_type=2):
         self._mh = mh
         self._mH = mH
-        self._cos_betal = cos_betal
+        if isinstance(cos_betal, str):
+            self._cos_betal = eval(cos_betal)
+        else:
+            self._cos_betal = cos_betal
         self._Z4 = Z4
         self._Z5 = Z5
         self._Z7 = Z7
@@ -337,6 +340,20 @@ class THDMInput(object):
     @cos_betal.setter
     def cos_betal(self, cos_betal):
         self._cos_betal = cos_betal
+
+    @property
+    def sin_betal(self):
+        # Assume that we always want to convert to the
+        # SusHi and 2HDMC convention for values of beta-alpha
+        # Add correct rescaling of angles, transformation of
+        # conventions taken from https://sushi.hepforge.org/manual.html
+        # 0 <= (beta-alpha)_B <= pi/2: no conversion of angle necessary
+        # (beta-alpha)_B > pi/2: (beta-alpha)_B = (beta-alpha)_A - pi
+        betal = math.acos(self._cos_betal)
+        if betal > math.pi/2:
+            betal -= pi
+        sin_betal = math.sin(betal)
+        return sin_betal
 
     @property
     def Z4(self):
@@ -377,3 +394,155 @@ class THDMInput(object):
     @type.setter
     def type(self, thdm_type):
         self._type = thdm_type
+
+
+class THDMPhysicsInput(object):
+
+    def __init__(self,
+                 mh=125.,
+                 mH=200.,
+                 mA=300.,
+                 mHp=300.,
+                 cos_betal=0.0,
+                 lambda6=0.0,
+                 lambda7=0.0,
+                 tanb=5.,
+                 thdm_type=2):
+        # TODO: For now calculate m12_square hard coded
+        # here
+        self._mh = mh
+        self._mH = mH
+        if isinstance(mA, str):
+            self._mA = eval(mA)
+        else:
+            self._mA = mA
+        if isinstance(mHp, str):
+            self._mHp = eval(mHp)
+        else:
+            self._mHp = mHp
+        if isinstance(cos_betal, str):
+            self._cos_betal = eval(cos_betal)
+        else:
+            self._cos_betal = cos_betal
+        self._lambda6 = lambda6
+        self._lambda7 = lambda7
+        self._tanb = tanb
+        self._type = thdm_type
+        # Calculate m12_square from the given values
+        Z5 = self._mH**2 * (1 - self._cos_betal**2) \
+                + mh**2 * self._cos_betal**2 \
+                - self._mA**2
+        Z6 = (mh**2 - self._mH**2) \
+             * self._cos_betal*math.sin(math.acos(self._cos_betal))
+        lambda5 = Z5 + 0.5 * Z6 * math.tan(2 * math.atan(tanb))
+        logger.debug("Parameters in physical basis:")
+        logger.debug("Z5: ", Z5)
+        logger.debug("Z6: ", Z6)
+        logger.debug("lamda5: ", lambda5)
+        logger.debug("beta: ", math.atan(tanb))
+        logger.debug("sin(beta-alpha): ", math.sin(math.acos(self._cos_betal)))
+        self._m12_square = max(1-1./(tanb**2), 0) \
+                            * 0.5 * math.sin(2 * math.atan(tanb))*(self._mA**2 + lambda5)
+
+    @property
+    def mh(self):
+        return self._mh
+
+    @mh.setter
+    def mh(self, mh):
+        self._mh = mh
+
+    @property
+    def mH(self):
+        return self._mH
+
+    @mH.setter
+    def mH(self, mH):
+        self._mH = mH
+
+    @property
+    def mA(self):
+        return self._mA
+
+    @mA.setter
+    def mA(self, mA):
+        self._mA = mA
+
+    @property
+    def mHp(self):
+        return self._mHp
+
+    @mHp.setter
+    def mHp(self, mHp):
+        self._mHp = mHp
+
+    @property
+    def cos_betal(self):
+        return self._cos_betal
+
+    @cos_betal.setter
+    def cos_betal(self, cos_betal):
+        self._cos_betal = cos_betal
+
+    @property
+    def sin_betal(self):
+        # Assume that we always want to convert to the
+        # SusHi and 2HDMC convention for values of beta-alpha
+        # Add correct rescaling of angles, transformation of
+        # conventions taken from https://sushi.hepforge.org/manual.html
+        # 0 <= (beta-alpha)_B <= pi/2: no conversion of angle necessary
+        # (beta-alpha)_B > pi/2: (beta-alpha)_B = (beta-alpha)_A - pi
+        betal = math.acos(self._cos_betal)
+        if betal > math.pi/2:
+            betal -= pi
+        sin_betal = math.sin(betal)
+        return sin_betal
+
+    @sin_betal.setter
+    def sin_betal(self, sin_betal):
+        # Convert sin_betal inputs such that we always store cos(bet-al)
+        # in convention B
+        betal = math.asin(sin_betal)
+        if betal < 0:
+            betal = betal + math.pi
+        self._cos_betal = math.cos(betal)
+
+    @property
+    def lambda6(self):
+        return self._lambda6
+
+    @lambda6.setter
+    def lambda6(self, lambda6):
+        self._lambda6 = lambda6
+
+    @property
+    def lambda7(self):
+        return self._lambda7
+
+    @lambda7.setter
+    def lambda7(self, lambda7):
+        self._lambda7 = lambda7
+
+    @property
+    def tanb(self):
+        return self._tanb
+
+    @tanb.setter
+    def tanb(self, tanb):
+        self._tanb = tanb
+
+    @property
+    def type(self):
+        return self._type
+
+    @type.setter
+    def type(self, thdm_type):
+        self._type = thdm_type
+
+    @property
+    def m12_square(self):
+        return self._m12_square
+
+    @m12_square.setter
+    def m12_square(self, m12_square):
+        self._m12_square = m12_square

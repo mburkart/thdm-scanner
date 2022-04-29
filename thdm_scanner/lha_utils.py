@@ -331,6 +331,14 @@ class SusHiInput(LHAFile):
         thdmc_block.add_entry_from_vals("1", "3", "2HDMC key, 1=lambda basis, 2=physical basis, 3=H2 basis")  # noqa: E501
         thdmc_block.add_entry_from_vals("2", "2", "2HDM version type: (1=Type I,2=Type II,3=Flipped,4=Lepton Specific)")  # noqa: E501
         thdmc_block.add_entry_from_vals("3", "10.", "tan(beta)")
+        thdmc_block.add_entry_from_vals("4", "100.", "m12")
+        thdmc_block.add_entry_from_vals("21", "125.38d0", "mh")
+        thdmc_block.add_entry_from_vals("22", "300d0", "mH")
+        thdmc_block.add_entry_from_vals("23", "400d0", "mA")
+        thdmc_block.add_entry_from_vals("24", "400d0", "mC")
+        thdmc_block.add_entry_from_vals("25", "0.995", "sin(beta-alpha)")
+        thdmc_block.add_entry_from_vals("26", "0.0d0", "lambda_6")
+        thdmc_block.add_entry_from_vals("27", "0.0d0", "lambda_7")
         thdmc_block.add_entry_from_vals("31", "125.38d0", "mh")
         thdmc_block.add_entry_from_vals("32", "200.d0", "mH")
         thdmc_block.add_entry_from_vals("33", "0.5d0", "sin(beta-alpha)")
@@ -422,6 +430,15 @@ class SusHiInput(LHAFile):
                               choices={"11", "12", "21"})
 
     @property
+    def thdm_basis(self):
+        return int(self._get_entry_value("2HDMC", "1"))
+
+    @thdm_basis.setter
+    def thdm_basis(self, basis):
+        self._set_entry_value("2HDMC", "1", str(basis),
+                              choices={"1", "2", "3"})
+
+    @property
     def thdm_type(self):
         return int(self._get_entry_value("2HDMC", "2"))
 
@@ -445,6 +462,7 @@ class SusHiInput(LHAFile):
     @mh.setter
     def mh(self, mh):
         self._set_entry_value("2HDMC", "31", d_to_fortran_s(mh))
+        self._set_entry_value("2HDMC", "21", d_to_fortran_s(mh))
 
     @property
     def mH(self):
@@ -453,6 +471,7 @@ class SusHiInput(LHAFile):
     @mH.setter
     def mH(self, mH):
         self._set_entry_value("2HDMC", "32", d_to_fortran_s(mH))
+        self._set_entry_value("2HDMC", "22", d_to_fortran_s(mH))
 
     @property
     def sin_betal(self):
@@ -461,16 +480,7 @@ class SusHiInput(LHAFile):
     @sin_betal.setter
     def sin_betal(self, sin):
         self._set_entry_value("2HDMC", "33", d_to_fortran_s(sin))
-
-    @property
-    def cos_betal(self):
-        return math.cos(math.asin(
-            fortran_s_to_d(self._get_entry_value("2HDMC", "33"))))
-
-    @cos_betal.setter
-    def cos_betal(self, cos):
-        self._set_entry_value("2HDMC", "33",
-                              d_to_fortran_s(math.sin(math.acos(cos))))
+        self._set_entry_value("2HDMC", "25", d_to_fortran_s(sin))
 
     @property
     def Z4(self):
@@ -495,6 +505,48 @@ class SusHiInput(LHAFile):
     @Z7.setter
     def Z7(self, z7):
         self._set_entry_value("2HDMC", "36", d_to_fortran_s(z7))
+
+    @property
+    def m12(self):
+        return fortran_s_to_d(self._get_entry_value("2HDMC", "4"))
+
+    @m12.setter
+    def m12(self, m12):
+        self._set_entry_value("2HDMC", "4", d_to_fortran_s(m12))
+
+    @property
+    def mA(self):
+        return fortran_s_to_d(self._get_entry_value("2HDMC", "23"))
+
+    @mA.setter
+    def mA(self, mA):
+        self._set_entry_value("2HDMC", "23", d_to_fortran_s(mA))
+
+    @property
+    def mHp(self):
+        return fortran_s_to_d(self._get_entry_value("2HDMC", "24"))
+
+    @mHp.setter
+    def mHp(self, mHp):
+        self._set_entry_value("2HDMC", "24", d_to_fortran_s(mHp))
+
+    @property
+    def lambda6(self):
+        return fortran_s_to_d(self._get_entry_value("2HDMC", "26"))
+
+    @lambda6.setter
+    def lambda6(self, lambda6):
+        self._set_entry_value("2HDMC", "26", d_to_fortran_s(lambda6))
+
+    @property
+    def lambda7(self):
+        return fortran_s_to_d(self._get_entry_value("2HDMC", "27"))
+
+    @lambda7.setter
+    def lambda7(self, lambda7):
+        self._set_entry_value("2HDMC", "27", d_to_fortran_s(lambda7))
+    # TODO: Check these new quantities
+    # what does entry 50 do?
 
     @property
     def pdf_set(self):
