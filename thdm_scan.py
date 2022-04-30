@@ -61,8 +61,6 @@ def run_point(mod_pars, model=None, outpath="output",
               hybrid_basis=True, run_pdf_uncerts=False):
     # Create a model point in the 2D model plane
     (par_1, val_1), (par_2, val_2) = mod_pars
-    model_point = thdm_scanner.THDMPoint((par_1, par_2),
-                                         (val_1, val_2))
     # print(model.fixed_model_params)
     # Build the dictionary of the inputs from the
     # fixed parameters of the model and the scanned values
@@ -75,13 +73,12 @@ def run_point(mod_pars, model=None, outpath="output",
         inputs = thdm_scanner.THDMInput(**input_dict)
     else:
         inputs = thdm_scanner.THDMPhysicsInput(**input_dict)
-    model_point.cos_betal = inputs.cos_betal
+
     # Run 2HDMC calculations
     thdm_runner = thdm_scanner.THDMCRunner(outpath=outpath,
                                            scan_parameters=(par_1, par_2))
     thdm_runner.set_inputs(inputs)
     thdm_runner.run(hybrid_basis)
-    thdm_runner.harvest_output(model_point)
 
     # Run SusHi calculation separately for each Higgs boson
     sushi_runner = thdm_scanner.SusHiRunner(outpath=outpath,
@@ -89,7 +86,22 @@ def run_point(mod_pars, model=None, outpath="output",
                                             run_pdf_uncerts=run_pdf_uncerts)
     sushi_runner.set_inputs(inputs)
     sushi_runner.run(multiproc=False, hybrid_basis=hybrid_basis)
-    sushi_runner.harvest_output(model_point)
+
+    # Collect results from written output files
+    model_point = thdm_scanner.THDMPoint((par_1, par_2),
+                                         (val_1, val_2))
+    model_point.cos_betal = inputs.cos_betal
+    # First collect results from 2HDMC calculations
+    thdm_harvester = THDMCHarvester(outpath=outpath,
+                               scan_parameters=(par_1, par_2))
+    thdm_harvester.set_inputs(inputs)
+    thdm_harvester.harvest_output(model_point)
+    # Collect results from SusHi calculations
+    sushi_harvester = SusHiHarvester(outpath=outpath,
+                                     scan_parameters=(par_1, par_2),
+                                     run_pdf_uncerts=run_pdf_uncerts)
+    sushi_harvester.set_inputs(inputs)
+    sushi_harvester.harvest_output(model_point)
     return model_point
 
 

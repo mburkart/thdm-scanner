@@ -30,10 +30,6 @@ class THDMRunnerABC(object):
     def run(self):
         pass
 
-    @abstractmethod
-    def harvest_output(self, model_point):
-        pass
-
 
 class THDMCRunner(THDMRunnerABC):
     """Run THDMC with inputs in Hybrid basis"""
@@ -122,45 +118,6 @@ class THDMCRunner(THDMRunnerABC):
             logger.debug("Output file {} has been successfully written."
                          .format(self._outputfile))
         return
-
-    def harvest_output(self, model_point):
-        outfile = lha_utils.THDMCOutput(self._outputfile)
-        model_point.is_valid_model = outfile.valid_model
-        # Get properties of little h boson from output
-        h = thdm_scanner.grid.HiggsProperties("h")
-        h.mass = outfile.mh
-        h.br_tautau = outfile.br_htautau
-        # Get properties of heavy H boson from output
-        H = thdm_scanner.grid.HiggsProperties("H")
-        H.mass = outfile.mH
-        H.br_tautau = outfile.br_Htautau
-        # Get properties of pseudoscalar A boson from output
-        A = thdm_scanner.grid.HiggsProperties("A")
-        A.mass = outfile.mA
-        A.br_tautau = outfile.br_Atautau
-        # Add Yukawa couplings for each Higgs boson based on
-        # input parameters
-        beta = math.atan(self._input.tanb)  # atan return range: -pi/2(0), pi/2
-        alpha = beta - math.acos(self._input.cos_betal)  # acos ret.r: 0, pi
-        if self._input.type == 1:
-            h.gt = math.cos(alpha) / math.sin(beta)
-            h.gb = math.cos(alpha) / math.sin(beta)
-            H.gt = math.sin(alpha) / math.sin(beta)
-            H.gb = math.sin(alpha) / math.sin(beta)
-            A.gt = -1. / math.tan(beta)
-            A.gb = 1. / math.tan(beta)
-        else:
-            h.gt = math.cos(alpha) / math.sin(beta)
-            h.gb = -math.sin(alpha) / math.cos(beta)
-            H.gt = math.sin(alpha) / math.sin(beta)
-            H.gb = math.cos(alpha) / math.cos(beta)
-            A.gt = -1. / math.tan(beta)
-            A.gb = -math.tan(beta)
-        # Add the correct Higgs properties to the model point
-        model_point.h = h
-        model_point.H = H
-        model_point.A = A
-        return model_point
 
 
 class SusHiRunner(THDMRunnerABC):
