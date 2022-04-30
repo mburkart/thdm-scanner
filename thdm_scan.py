@@ -22,6 +22,12 @@ def parse_args():
             help="Input config file"
     )
     parser.add_argument(
+            "-o", "--output-path",
+            type=str,
+            default=None,
+            help="Optional path to output directory. Will be created if not present."
+    )
+    parser.add_argument(
             "-v", "--verbose",
             action="store_true",
             help="Enable debug logging"
@@ -92,8 +98,14 @@ def main(args):
         config = yaml.load(fi, Loader=yaml.SafeLoader)
 
     print(config)
+    if args.output_path is None:
+        # By default write into the current directory
+        output_path = os.path.basename(args.config).replace(".yaml", "")
+    else:
+        output_path = os.path.join(args.output_path,
+                                   os.path.basename(args.config).replace(".yaml", "")
+        )
     # Check if output directory exists, create it in case not
-    output_path = os.path.basename(args.config).replace(".yaml", "")
     if not os.path.exists(output_path):
         os.makedirs(output_path)
     # For each parameter point
