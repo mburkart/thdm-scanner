@@ -57,11 +57,10 @@ def setup_logging(level=logging.INFO):
     logger.addHandler(handler)
 
 
-def run_point(mod_pars, model=None, outpath="output",
-              hybrid_basis=True, run_pdf_uncerts=False):
+def create_inputs(mod_pars, model,
+                  hybrid_basis=True):
     # Create a model point in the 2D model plane
     (par_1, val_1), (par_2, val_2) = mod_pars
-    # print(model.fixed_model_params)
     # Build the dictionary of the inputs from the
     # fixed parameters of the model and the scanned values
     # to initialize the input object.
@@ -73,7 +72,12 @@ def run_point(mod_pars, model=None, outpath="output",
         inputs = thdm_scanner.THDMInput(**input_dict)
     else:
         inputs = thdm_scanner.THDMPhysicsInput(**input_dict)
+    return inputs
 
+
+
+def run_point(inputs, outpath="output",
+              hybrid_basis=True, run_pdf_uncerts=False):
     # Run 2HDMC calculations
     thdm_runner = thdm_scanner.THDMCRunner(outpath=outpath,
                                            scan_parameters=(par_1, par_2))
@@ -86,7 +90,12 @@ def run_point(mod_pars, model=None, outpath="output",
                                             run_pdf_uncerts=run_pdf_uncerts)
     sushi_runner.set_inputs(inputs)
     sushi_runner.run(multiproc=False, hybrid_basis=hybrid_basis)
+    return
 
+
+def collect_result(inputs, outpath="output",
+                    run_pdf_uncerts=False):
+    (par_1, val_1), (par_2, val_2) = mod_pars
     # Collect results from written output files
     model_point = thdm_scanner.THDMPoint((par_1, par_2),
                                          (val_1, val_2))
@@ -132,19 +141,22 @@ def main(args):
         hybrid_basis = False
     if args.procs > 1:
         with multiprocessing.Pool(args.procs) as pool:
-            model_points = pool.starmap(run_point,
-                                        zip(model.parameter_points(),
-                                            repeat(model),
-                                            repeat(output_path),
-                                            repeat(hybrid_basis),
-                                            repeat(args.run_pdfas_uncerts)))
+            pool.starmap(run_point,
+                         zip(map(create_inputs, model.parameter_points(), repeat(model)),
+                         repeat(output_path),
+                         repeat(hybrid_basis),
+                         repeat(args.run_pdfas_uncerts)))
     else:
-        model_points = []
         for mod_pars in model.parameter_points():
-            model_points.append(run_point(mod_pars, model,
-                                          output_path, hybrid_basis,
-                                          args.run_pdfas_uncerts))
+            inputs = create_inputs(mod_pars, model, hybrid_basis=hybrid_basis)
+            run_point(inputs,
+                      output_path, hybrid_basis,
+                      args.run_pdfas_uncerts))
 
+    model_points = []
+    model_points.append(collect_result(mod_pars, model,
+                                       output_path, hybrid_basis,
+                                       args.run_pdfas_uncerts))
     for model_point in model_points:
         # Add model point to grid.
         model.add_point(model_point)
