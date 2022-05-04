@@ -153,13 +153,11 @@ def main(args):
                       output_path, hybrid_basis,
                       args.run_pdfas_uncerts))
 
-    model_points = []
-    model_points.append(collect_result(mod_pars, model,
+    for mod_pars in model.parameter_points():
+        # Add model point to grid.
+        model.add_point(collect_result(mod_pars, model,
                                        output_path, hybrid_basis,
                                        args.run_pdfas_uncerts))
-    for model_point in model_points:
-        # Add model point to grid.
-        model.add_point(model_point)
     # Write grid of points to root file
     model.write_to_root()
     return
