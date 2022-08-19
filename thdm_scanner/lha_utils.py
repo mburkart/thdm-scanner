@@ -188,8 +188,10 @@ class DecayBlock(object):
             if entry._decay_products == dec_prods:
                 return entry.br
         else:
-            raise KeyError("No decay with products {} in {}".format(
+            print("No decay with products {} in:\n{}".format(
                             dec_prods, self))
+            print("Setting BR to 0.")
+            return "0."
 
 
 class LHAFile(object):
@@ -285,7 +287,8 @@ class LHAFile(object):
             else:
                 if block._particle == blk_name:
                     br_key = tuple(key.split(","))
-                    return block.get_branching_ratio(br_key)
+                    br = block.get_branching_ratio(br_key)
+                    return br
         else:
             raise KeyError("No block `{}` in {}".format(blk_name, self))
 
