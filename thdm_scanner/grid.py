@@ -170,7 +170,12 @@ class THDMPoint(object):
 
     @property
     def sin_betal(self):
-        return math.sin(math.acos(cos_betal)
+        return math.sin(math.acos(self._cos_betal))
+
+    @sin_betal.setter
+    def sin_betal(self, sin_betal):
+        raise NotImplementedError("Passing a value for sin(beta-alpha) "
+                                  "is only allow via the cos_betal member")
 
 
 class THDMModel(object):
