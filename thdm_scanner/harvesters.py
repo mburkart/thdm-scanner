@@ -43,7 +43,7 @@ class THDMCHarvester(THDMHarvesterABC):
         self._input = inputs
 
     def harvest_output(self, model_point):
-        outname = self._outputfile.replace(".out", "{}.{}.{}.{}.out".format(
+        outname = self._outputfile.replace(".out", ".{}.{}.{}.{}.out".format(
             self._scan_params[0],
             getattr(self._input, self._scan_params[0]),
             self._scan_params[1],

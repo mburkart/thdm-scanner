@@ -184,8 +184,8 @@ class SusHiRunner(THDMRunnerABC):
                                       "SusHi-1.7.0",
                                       "bin",
                                       "sushi"),
-                         infile_name,
-                         infile_name.replace("in", "out").replace("_output", "")])  # noqa: E501
+                         os.path.relpath(infile_name),
+                         os.path.relpath(infile_name.replace("in", "out").replace("_output", ""))])  # noqa: E501
         # Perform a separate run for each PDF and alpha_s
         # replica to calculate uncertainty
         if self._run_uncerts:
@@ -206,8 +206,8 @@ class SusHiRunner(THDMRunnerABC):
                                               "SusHi-1.7.0",
                                               "bin",
                                               "sushi"),
-                                 inname_update,
-                                 inname_update.replace("in", "out").replace("_output", "")])  # noqa: E501
+                                 os.path.relpath(inname_update),
+                                 os.path.relpath(inname_update.replace("in", "out").replace("_output", ""))])  # noqa: E501
         return
 
     def harvest_output(self, model_point):
