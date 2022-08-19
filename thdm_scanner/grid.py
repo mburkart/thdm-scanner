@@ -391,7 +391,7 @@ class THDMInput(object):
         # (beta-alpha)_B > pi/2: (beta-alpha)_B = (beta-alpha)_A - pi
         betal = math.acos(self._cos_betal)
         if betal > math.pi/2:
-            betal -= pi
+            betal -= math.pi
         sin_betal = math.sin(betal)
         return sin_betal
 
@@ -534,7 +534,7 @@ class THDMPhysicsInput(object):
         # (beta-alpha)_B > pi/2: (beta-alpha)_B = (beta-alpha)_A - pi
         betal = math.acos(self._cos_betal)
         if betal > math.pi/2:
-            betal -= pi
+            betal -= math.pi
         sin_betal = math.sin(betal)
         return sin_betal
 
