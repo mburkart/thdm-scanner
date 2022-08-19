@@ -28,12 +28,21 @@ class Task(law.Task):
     """
 
     version = luigi.Parameter()
-    scenario = luigi.ChoiceParameter(str, choices=[], description="Name of the scenario that is run.
-            This name is also used as the identifier for the configuration file")
+    scenario = luigi.ChoiceParameter(str,
+                                     choices=[
+                                         "BP1_Type1_mod",
+                                         "BP1_Type2",
+                                         "HWWLike_Type1",
+                                         "HWWLike_Type2",
+                                         "PASComp_Type1",
+                                         "PASComp_Type2",
+                                         ],
+                                     description="Name of the scenario that is run."
+            "This name is also used as the identifier for the configuration file")
     run_pdfas_uncerts = luigi.BoolParameter(description="Run extra variations for pdf and alpha_s uncertainties.")
 
     def store_parts(self):
-        return (self.__class__.__name__, self.version)
+        return (self.__class__.__name__, self.scenario, self.version)
 
     def local_path(self, *path):
         # ANALYSIS_DATA_PATH is defined in setup.sh
@@ -42,6 +51,14 @@ class Task(law.Task):
 
     def local_target(self, *path):
         return law.LocalFileTarget(self.local_path(*path))
+
+    # def remote_path(self, *path):
+    #     # ANALYSIS_DATA_PATH is defined in setup.sh
+    #     parts = (os.getenv("ANALYSIS_DATA_PATH"),) + self.store_parts() + path
+    #     return os.path.join(*parts)
+
+    # def remote_target(self, *path):
+    #     return law.RemoteFileTarget(self.local_path(*path))
 
 
 class HTCondorWorkflow(law.htcondor.HTCondorWorkflow):
@@ -53,8 +70,15 @@ class HTCondorWorkflow(law.htcondor.HTCondorWorkflow):
     configuration is required.
     """
 
-    max_runtime = law.DurationParameter(default=2.0, unit="h", significant=False,
-        description="maximum runtime, default unit is hours, default: 2")
+    htcondor_accounting_group = luigi.Parameter()
+    htcondor_requirements = luigi.Parameter()
+    htcondor_remote_job = luigi.Parameter()
+    htcondor_walltime = luigi.Parameter()
+    htcondor_request_cpus = luigi.Parameter()
+    htcondor_request_memory = luigi.Parameter()
+    htcondor_universe = luigi.Parameter()
+    htcondor_docker_image = luigi.Parameter()
+    htcondor_request_disk = luigi.Parameter()
 
     def htcondor_output_directory(self):
         # the directory where submission meta data should be stored
@@ -70,10 +94,15 @@ class HTCondorWorkflow(law.htcondor.HTCondorWorkflow):
         config.render_variables["analysis_path"] = os.getenv("ANALYSIS_PATH")
 
         # force to run on CC7, http://batchdocs.web.cern.ch/batchdocs/local/submit.html#os-choice
-        config.custom_content.append(("requirements", "(OpSysAndVer =?= \"CentOS7\")"))
-
-        # maximum runtime
-        config.custom_content.append(("+MaxRuntime", int(math.floor(self.max_runtime * 3600)) - 1))
+        config.custom_content.append(("Requirements", self.htcondor_requirements))
+        config.custom_content.append(("+RemoteJob", self.htcondor_remote_job))
+        config.custom_content.append(("accounting_group", self.htcondor_accounting_group))
+        config.custom_content.append(("universe", self.htcondor_universe))
+        config.custom_content.append(("docker_image", self.htcondor_docker_image))
+        config.custom_content.append(("+RequestWalltime", self.htcondor_walltime))
+        config.custom_content.append(("request_cpus", self.htcondor_request_cpus))
+        config.custom_content.append(("RequestMemory", self.htcondor_request_memory))
+        config.custom_content.append(("RequestDisk", self.htcondor_request_disk))
 
         # copy the entire environment
         config.custom_content.append(("getenv", "true"))
