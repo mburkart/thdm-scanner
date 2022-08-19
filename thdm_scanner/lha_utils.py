@@ -431,6 +431,10 @@ class SusHiInput(LHAFile):
     def higgs_boson(self, higgs_code):
         self._set_entry_value("SUSHI", "2", str(higgs_code),
                               choices={"11", "12", "21"})
+        # For SM-like light scalar Higgs boson calculate
+        # ggH cross section in N3LO, for others leave at NNLO
+        if str(higgs_code) == "11":
+            self._set_entry_value("SUSHI", "5", "3")
 
     @property
     def thdm_basis(self):
