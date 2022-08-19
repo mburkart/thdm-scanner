@@ -447,6 +447,7 @@ class THDMPhysicsInput(object):
                  lambda6=0.0,
                  lambda7=0.0,
                  tanb=5.,
+                 m12_square=None,
                  thdm_type=2):
         # TODO: For now calculate m12_square hard coded
         # here
@@ -469,20 +470,25 @@ class THDMPhysicsInput(object):
         self._tanb = tanb
         self._type = thdm_type
         # Calculate m12_square from the given values
-        Z5 = self._mH**2 * (1 - self._cos_betal**2) \
-                + mh**2 * self._cos_betal**2 \
-                - self._mA**2
-        Z6 = (mh**2 - self._mH**2) \
-             * self._cos_betal*math.sin(math.acos(self._cos_betal))
-        lambda5 = Z5 + 0.5 * Z6 * math.tan(2 * math.atan(tanb))
-        logger.debug("Parameters in physical basis:")
-        logger.debug("Z5: ", Z5)
-        logger.debug("Z6: ", Z6)
-        logger.debug("lamda5: ", lambda5)
-        logger.debug("beta: ", math.atan(tanb))
-        logger.debug("sin(beta-alpha): ", math.sin(math.acos(self._cos_betal)))
-        self._m12_square = max(1-1./(tanb**2), 0) \
-                            * 0.5 * math.sin(2 * math.atan(tanb))*(self._mA**2 + lambda5)
+        if m12_square is None:
+            Z5 = self._mH**2 * (1 - self._cos_betal**2) \
+                 + mh**2 * self._cos_betal**2 \
+                 - self._mA**2
+            Z6 = (mh**2 - self._mH**2) \
+                  * self._cos_betal*math.sin(math.acos(self._cos_betal))
+            lambda5 = Z5 + 0.5 * Z6 * math.tan(2 * math.atan(tanb))
+            logger.debug("Parameters in physical basis:")
+            logger.debug("Z5: ", Z5)
+            logger.debug("Z6: ", Z6)
+            logger.debug("lamda5: ", lambda5)
+            logger.debug("beta: ", math.atan(tanb))
+            logger.debug("sin(beta-alpha): ", math.sin(math.acos(self._cos_betal)))
+            self._m12_square = max(1-1./(tanb**2), 0) \
+                                * 0.5 * math.sin(2 * math.atan(tanb))*(self._mA**2 + lambda5)
+        elif isinstance(m12_square, str):
+            self._m12_square = eval(m12_square)
+        else:
+            self._m12_square = m12_square
 
     @property
     def mh(self):
