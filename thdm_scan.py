@@ -75,7 +75,6 @@ def create_inputs(mod_pars, model,
     return inputs
 
 
-
 def run_point(inputs, outpath="output",
               hybrid_basis=True, run_pdf_uncerts=False):
     # Run 2HDMC calculations
@@ -94,7 +93,7 @@ def run_point(inputs, outpath="output",
 
 
 def collect_result(inputs, outpath="output",
-                    run_pdf_uncerts=False):
+                   run_pdf_uncerts=False):
     (par_1, val_1), (par_2, val_2) = mod_pars
     # Collect results from written output files
     model_point = thdm_scanner.THDMPoint((par_1, par_2),
@@ -102,7 +101,7 @@ def collect_result(inputs, outpath="output",
     model_point.cos_betal = inputs.cos_betal
     # First collect results from 2HDMC calculations
     thdm_harvester = THDMCHarvester(outpath=outpath,
-                               scan_parameters=(par_1, par_2))
+                                    scan_parameters=(par_1, par_2))
     thdm_harvester.set_inputs(inputs)
     thdm_harvester.harvest_output(model_point)
     # Collect results from SusHi calculations
