@@ -10,6 +10,7 @@ import yaml
 import os
 import shutil
 import logging
+import glob
 logging.basicConfig(level=logging.INFO)
 from itertools import repeat
 from multiprocessing import Pool
@@ -165,19 +166,8 @@ class CollectScan(Task):
                 include_pdfas_unc=self.run_pdfas_uncerts
                 )
         print("Status: Unzipping tarball results...")
-        # Running with pool not possible as class/instance methods are used
-        if self.skip_unpacking:
-            pass
-        else:
-            with Pool(2) as pool:
-                pool.starmap(load_tarballs,
-                             zip(self.input()["collection"].targets.values(),
-                                 repeat("tarballs_results/{}".format(self.scenario)))
-                             )
-        # for inp in self.input()["collection"].targets.values():
-        #     inp.load("tarballs_results/{}".format(self.scenario))
         print("Status: Parsing unzipped results...")
-        for mod_pars in model.parameter_points():
+        for i, mod_pars in enumerate(model.parameter_points()):
             (par_1, val_1), (par_2, val_2) = mod_pars
             inputs = create_inputs(mod_pars, model,
                                    hybrid_basis="physical_basis" not in config)
@@ -185,6 +175,12 @@ class CollectScan(Task):
             model_point = thdm_scanner.THDMPoint((par_1, par_2),
                                                  (val_1, val_2))
             model_point.cos_betal = inputs.cos_betal
+            # Running with pool not possible as class/instance methods are used
+            if self.skip_unpacking:
+                pass
+            else:
+                self.input()["collection"].targets[i].load(
+                       os.path.join(os.getcwd(), "tarballs_results", self.scenario))
             # First collect results from 2HDMC calculations
             thdm_harvester = thdm_scanner.THDMCHarvester(
                     # outpath=os.getenv("ANALYSIS_DATA_PATH"),
@@ -204,6 +200,8 @@ class CollectScan(Task):
 
             # Add the harvested point to the model
             model.add_point(model_point)
+            for fi in glob.glob(os.path.join("tarballs_results", self.scenario, "*.out")):
+                os.remove(fi)
         model.write_to_root()
         self.publish_message("\nbuilt THDM scan for model: {}\n".format(self.scenario))
         output = self.output()
