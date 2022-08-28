@@ -1,0 +1,14 @@
+---
+name: "BP1_Type2"
+
+scan_parameter:
+    mH: [150, 625, 25]
+    tanb: [2, 51, 1]
+
+benchmark_parameter:
+    mh: 125.38
+    cos_betal: 0.01
+    Z4: -2.
+    Z5: -2.
+    Z7: 0.0
+    thdm_type: 2
