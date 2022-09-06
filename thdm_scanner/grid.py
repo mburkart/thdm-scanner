@@ -198,25 +198,21 @@ class THDMModel(object):
     def fixed_model_params(self):
         return self._model_parameters
 
+    def _get_param_range(self, param):
+        """Calculate the points to scan for parameter param from inputs"""
+        return np.round(np.arange(*self._scan_parameters[param]),
+                        decimals=2)
+
     def parameter_points(self):
         par_1, par_2 = self._scan_parameters.keys()
-        for x in np.round(np.arange(*self._scan_parameters[par_1]),
-                          decimals=2):
-            for y in np.round(np.arange(*self._scan_parameters[par_2]),
-                              decimals=2):
+        for x in self._get_param_range(par_1):
+            for y in self._get_param_range(par_2):
                 yield ((par_1, x), (par_2, y))
 
     def add_point(self, point):
         self._model_points.append(point)
 
-    def write_to_root(self):
-        # Quantities to be written:
-        # Masses, cross sections and branching ratios for every Higgs boson
-        # model validity
-        logger.info("Writing created grid outputs to root file {}".format(
-                        self.name + ".root"))
-        # Open root file
-        output = ROOT.TFile(self.name + ".root", "recreate")
+    def _derive_binning(self):
         # Determine binning
         par_1, par_2 = self._scan_parameters.keys()
         xlow = (self._scan_parameters[par_1][0]
@@ -231,39 +227,48 @@ class THDMModel(object):
                - self._scan_parameters[par_2][2] / 2.)
         ybins = int(round((self._scan_parameters[par_2][1] - self._scan_parameters[par_2][0])  # noqa: E501
                           / self._scan_parameters[par_2][2]))
+        return (xlow, xup, xbins), (ylow, yup, ybins)
+
+    def write_to_root(self):
+        # Quantities to be written:
+        # Masses, cross sections and branching ratios for every Higgs boson
+        # model validity
+        logger.info("Writing created grid outputs to root file {}".format(
+                        self.name + ".root"))
+        # Open root file
+        output = ROOT.TFile(self.name + ".root", "recreate")
+        # TODO: Different calculation of binning will allow
+        #       running with non-equidistant binning
         # Create histograms for each quantity to be written
+        (xlow, xup, xbins), (ylow, yup, ybins) = self._derive_binning()
         hists = {}
         for boson in ["h", "H", "A"]:
-            for quant in map(lambda x: x.format(boson),
-                             ["m_{}",
-                              "xs_gg{}",
-                              "xs_bb{}",
-                              "br_{}tautau",
-                              "xs_gg{}_scale_down",
-                              "xs_gg{}_scale_up",
-                              "gt_{}",
-                              "gb_{}"]):
-                hists["{}".format(quant)] = ROOT.TH2D("{}".format(quant),
-                                                      "{}".format(quant),
-                                                      xbins,
-                                                      xlow,
-                                                      xup,
-                                                      ybins,
-                                                      ylow,
-                                                      yup)
+            quant_list = [
+                    "m_{}",
+                    "xs_gg{}",
+                    "xs_bb{}",
+                    "br_{}tautau",
+                    "xs_gg{}_scale_down",
+                    "xs_gg{}_scale_up",
+                    "gt_{}",
+                    "gb_{}",
+                    ]
             if self._pdfas_unc:
-                for quant in map(lambda x: x.format(boson),
-                                 ["xs_gg{}_pdfas_down",
-                                  "xs_gg{}_pdfas_up",
-                                  ]):
-                    hists["{}".format(quant)] = ROOT.TH2D("{}".format(quant),
-                                                          "{}".format(quant),
-                                                          xbins,
-                                                          xlow,
-                                                          xup,
-                                                          ybins,
-                                                          ylow,
-                                                          yup)
+                quant_list.extend([
+                    "xs_gg{}_pdfas_down",
+                    "xs_gg{}_pdfas_up",
+                ])
+            for quant in map(lambda x: x.format(boson),
+                             quant_list):
+                quant_exp = "{}".format(quant)
+                hists[quant_exp] = ROOT.TH2D(quant_exp,
+                                             quant_exp,
+                                             xbins,
+                                             xlow,
+                                             xup,
+                                             ybins,
+                                             ylow,
+                                             yup)
         hists["model_validity"] = ROOT.TH2D("model_validity",
                                             "model_validity",
                                             xbins,
@@ -289,6 +294,7 @@ class THDMModel(object):
                                        ylow,
                                        yup)
         # Fill the histograms per model point
+        par_1, par_2 = self._scan_parameters.keys()
         for point in self._model_points:
             x_val, y_val = (point.parameter_point
                             if point.parameter_names[0] == par_1
