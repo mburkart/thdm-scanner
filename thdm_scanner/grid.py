@@ -24,6 +24,7 @@ class HiggsProperties(object):
         self._yukawa_t = 0
         self._yukawa_b = 0
         self._gg_xs_pdfas_unc = (0., 0.)
+        self._bb_xs_pdfas_unc = (0., 0.)
 
     @property
     def name(self):
@@ -100,6 +101,16 @@ class HiggsProperties(object):
         if len(unc) != 2:
             raise ValueError("Uncertainty on gg{} xsec must be given as tuple.".format(self.name))  # noqa: E501
         self._gg_xs_pdfas_unc = unc
+
+    @property
+    def bb_xs_pdfas_unc(self):
+        return self._bb_xs_pdfas_unc
+
+    @bb_xs_pdfas_unc.setter
+    def bb_xs_pdfas_unc(self, unc):
+        if len(unc) != 2:
+            raise ValueError("Uncertainty on gg{} xsec must be given as tuple.".format(self.name))  # noqa: E501
+        self._bb_xs_pdfas_unc = unc
 
 
 class THDMPoint(object):
@@ -257,6 +268,8 @@ class THDMModel(object):
                 quant_list.extend([
                     "xs_gg{}_pdfas_down",
                     "xs_gg{}_pdfas_up",
+                    "xs_bb{}_pdfas_down",
+                    "xs_bb{}_pdfas_up",
                 ])
             for quant in map(lambda x: x.format(boson),
                              quant_list):
@@ -334,6 +347,12 @@ class THDMModel(object):
                     hists["xs_gg{}_pdfas_up".format(boson)].Fill(
                             x_val, y_val,
                             getattr(point, boson).gg_xs_pdfas_unc[1])
+                    hists["xs_bb{}_pdfas_down".format(boson)].Fill(
+                            x_val, y_val,
+                            getattr(point, boson).bb_xs_pdfas_unc[0])
+                    hists["xs_bb{}_pdfas_up".format(boson)].Fill(
+                            x_val, y_val,
+                            getattr(point, boson).bb_xs_pdfas_unc[1])
 
         # Write and close the root file
         output.Write()

@@ -126,7 +126,7 @@ class SusHiHarvester(THDMHarvesterABC):
             # as cross check.
             if outfile.mPhi != getattr(model_point, higgs_dict[higgs]).mass:
                 raise RuntimeError("Mass calculated from SusHi and 2HDMC "
-                                   "do not agree. "
+                                   "does not agree. "
                                    "Values are {} and {}".format(
                                        outfile.mPhi,
                                        getattr(model_point,
@@ -136,6 +136,7 @@ class SusHiHarvester(THDMHarvesterABC):
                 # Collect all calculated cross sections for pdf and
                 # alpha_s variations.
                 ggPhi_xsections = []
+                bbPhi_xsections = []
                 for pdf_member in range(1, 103):
                     outname = self._outputfile.replace(".out",
                                                        ".{}.{}.{}.{}.H{}.pdf{}.out".format(
@@ -149,17 +150,24 @@ class SusHiHarvester(THDMHarvesterABC):
                                                            pdf_member))
                     outfile = lha_utils.SusHiOutput(outname)
                     ggPhi_xsections.append(outfile.xs_ggPhi)
+                    bbPhi_xsections.append(outfile.xs_bbPhi)
                 # Calculate the uncertainties from the collected values
                 # For the pdf uncertainties there are two different
                 # possibilieties to calculate the uncertainties (arXiv:)
                 # Possibility 1:
                 pdf_unc = np.std(ggPhi_xsections[:-2], ddof=1)
+                pdf_unc_bbPhi = np.std(bbPhi_xsections[:-2], ddof=1)
                 # Possibility 2 (asymmetric non-Gaussian case):
                 # sorted_pdf_uncs = sorted(ggPhi_xsections[:-2])
                 # pdf_unc = (sorted_pdf_uncs[83]-sorted_pdf_uncs[15]) / 2.
+                # sorted_pdf_uncs = sorted(bbPhi_xsections[:-2])
+                # pdf_unc_bbPhi = (sorted_pdf_uncs[83]-sorted_pdf_uncs[15]) / 2.
 
                 # Calculate alpha_s uncertainty from remaining variations
                 alphas_unc = (ggPhi_xsections[-1] - ggPhi_xsections[-2]) / 2.
                 pdf_as_unc = math.sqrt(pdf_unc**2 + alphas_unc**2)
                 getattr(model_point, higgs_dict[higgs]).gg_xs_pdfas_unc = (-pdf_as_unc, pdf_as_unc)
+                alphas_unc_bbPhi = (bbPhi_xsections[-1] - bbPhi_xsections[-2]) / 2.
+                pdf_as_unc_bbPhi = math.sqrt(pdf_unc_bbPhi**2 + alphas_unc_bbPhi**2)
+                getattr(model_point, higgs_dict[higgs]).bb_xs_pdfas_unc = (-pdf_as_unc_bbPhi, pdf_as_unc_bbPhi)
         return
