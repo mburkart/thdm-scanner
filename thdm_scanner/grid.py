@@ -482,6 +482,7 @@ class THDMPhysicsInput(object):
             self._mA = eval(mA)
         else:
             self._mA = mA
+        mA = self.mA
         if isinstance(mHp, str):
             self._mHp = eval(mHp)
         else:
@@ -493,6 +494,7 @@ class THDMPhysicsInput(object):
         self._lambda6 = lambda6
         self._lambda7 = lambda7
         self._tanb = tanb
+        tanb = self._tanb
         self._type = thdm_type
         # Calculate m12_square from the given values
         if m12_square is None:
