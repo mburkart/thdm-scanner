@@ -130,6 +130,10 @@ class THDMPoint(object):
         self.parameter_names = par_names
         self.parameter_point = par_values
         self._is_valid_model = False
+        self._has_valid_params = False
+        self._unitarity = False
+        self._perturbativity = False
+        self._stability = False
         self._h = h
         self._H = H
         self._A = A
@@ -142,6 +146,38 @@ class THDMPoint(object):
     @is_valid_model.setter
     def is_valid_model(self, model_valid):
         self._is_valid_model = model_valid
+
+    @property
+    def has_valid_params(self):
+        return self._has_valid_params
+
+    @has_valid_params.setter
+    def has_valid_params(self, params_valid):
+        self._has_valid_params = params_valid
+
+    @property
+    def unitarity(self):
+        return self._unitarity
+
+    @unitarity.setter
+    def unitarity(self, unitarity):
+        self._unitarity = unitarity
+
+    @property
+    def perturbativity(self):
+        return self._perturbativity
+
+    @perturbativity.setter
+    def perturbativity(self, perturbativity):
+        self._perturbativity = perturbativity
+
+    @property
+    def stability(self):
+        return self._stability
+
+    @stability.setter
+    def stability(self, stability):
+        self._stability = stability
 
     @property
     def h(self):
@@ -282,14 +318,19 @@ class THDMModel(object):
                                              ybins,
                                              ylow,
                                              yup)
-        hists["model_validity"] = ROOT.TH2D("model_validity",
-                                            "model_validity",
-                                            xbins,
-                                            xlow,
-                                            xup,
-                                            ybins,
-                                            ylow,
-                                            yup)
+        for qual in ["model_validity",
+                     "has_valid_params",
+                     "unitarity",
+                     "perturbativity",
+                     "stability"]:
+            hists[qual] = ROOT.TH2D(qual,
+                                    qual,
+                                    xbins,
+                                    xlow,
+                                    xup,
+                                    ybins,
+                                    ylow,
+                                    yup)
         hists["cos_betal"] = ROOT.TH2D("cos(beta-alpha)",
                                        "cos(beta-alpha)",
                                        xbins,
@@ -313,6 +354,10 @@ class THDMModel(object):
                             if point.parameter_names[0] == par_1
                             else reversed(point.parameter_point))
             hists["model_validity"].Fill(x_val, y_val, point.is_valid_model)
+            hists["has_valid_params"].Fill(x_val, y_val, point.has_valid_params)
+            hists["unitarity"].Fill(x_val, y_val, point.unitarity)
+            hists["perturbativity"].Fill(x_val, y_val, point.perturbativity)
+            hists["stability"].Fill(x_val, y_val, point.stability)
             hists["cos_betal"].Fill(x_val, y_val, point.cos_betal)
             hists["sin_betal"].Fill(x_val, y_val, point.sin_betal)
             for boson in ["h", "H", "A"]:

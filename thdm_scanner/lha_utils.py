@@ -589,6 +589,22 @@ class THDMCOutput(LHAFile):
         return sum(val_flags) == 4
 
     @property
+    def valid_params(self):
+        return int(self._get_entry_value("THDM", str(1))) == 1
+
+    @property
+    def unitarity(self):
+        return int(self._get_entry_value("THDM", str(2))) == 1
+
+    @property
+    def perturbativity(self):
+        return int(self._get_entry_value("THDM", str(3))) == 1
+
+    @property
+    def stability(self):
+        return int(self._get_entry_value("THDM", str(4))) == 1
+
+    @property
     def mh(self):
         return float(self._get_entry_value("MASS", "25"))
 

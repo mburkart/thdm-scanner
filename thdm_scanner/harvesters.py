@@ -52,6 +52,10 @@ class THDMCHarvester(THDMHarvesterABC):
         )
         outfile = lha_utils.THDMCOutput(outname)
         model_point.is_valid_model = outfile.valid_model
+        model_point.has_valid_params = outfile.valid_params
+        model_point.unitarity = outfile.unitarity
+        model_point.perturbativity = outfile.perturbativity
+        model_point.stability = outfile.stability
         # Get properties of little h boson from output
         h = thdm_scanner.grid.HiggsProperties("h")
         h.mass = outfile.mh
