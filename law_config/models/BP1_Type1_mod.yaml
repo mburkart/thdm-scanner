@@ -2,8 +2,8 @@
 name: "BP1_Type1_mod"
 
 scan_parameter:
-    mH: [150, 625, 25]
-    tanb: [1.2, 50.2, 0.2]
+    mH: [150, 610, 10]
+    tanb: [1.1, 10.1, 0.1]
 
 benchmark_parameter:
     mh: 125.38

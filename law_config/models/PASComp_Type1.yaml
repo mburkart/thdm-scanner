@@ -2,7 +2,7 @@
 name: "PASComp_Type1"
 
 scan_parameter:
-    mH: [140, 520, 20]
+    mH: [140, 510, 10]
     tanb: [0.5, 10.1, 0.1]
 
 benchmark_parameter:

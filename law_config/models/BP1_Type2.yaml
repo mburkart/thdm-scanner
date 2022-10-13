@@ -2,8 +2,8 @@
 name: "BP1_Type2"
 
 scan_parameter:
-    mH: [150, 625, 25]
-    tanb: [2, 51, 1]
+    mH: [147.5, 607.5, 5]
+    tanb: [1.1, 20.3, 0.2]
 
 benchmark_parameter:
     mh: 125.38
