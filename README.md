@@ -45,6 +45,17 @@ Then we set up SusHi by specifying the path to the 2HDMC directory and the corre
 sed -i "23 c\2HDMCPATH = ${PWD}/2HDMC-1.8.0" SusHi-1.7.0/Makefile
 sed -i "24 c\2HDMCVERSION = 1.8.0" SusHi-1.7.0/Makefile
 sed -i "35 c\LHAPATH = /cvmfs/sft.cern.ch/lcg/views/LCG_101/x86_64-centos7-gcc8-opt/lib" SusHi-1.7.0/Makefile
+# Start compiling after the edits
+pushd SusHi-1.7.0
 ./configure
-make --predef=2HDMC
+make predef=2HDMC
+popd
 ```
+
+## Running the scans
+Before running the workflow with law add the path to the installation directory of 2HDMC and SusHi line 20 in the setup script for law in the `law_config/setup.sh` script and source the script afterwards. The workflow can then be run with:
+
+```bash
+law run CollectScan --version v1 --scenario $scenario --run-pdfas-uncerts
+```
+where `$scenario` is one of the scenarios provided in `law_config/models` without the file extension.
